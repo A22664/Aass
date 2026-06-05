@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الديون الذكي | الدينار العراقي</title>
+    <title>نظام إدارة الديون الذكي | Smart Debt Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,168 +26,822 @@
             --text-muted: #94a3b8;
             --border: #334155;
             --glass: rgba(30, 41, 59, 0.7);
-            --iqd: #007a3d;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background: var(--darker); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
 
+        body {
+            background: var(--darker);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--darker);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+        
+        .splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-content {
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .splash-icon {
+            font-size: 6rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .splash-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+        }
+
+        .splash-subtitle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        .loading-bar-container {
+            width: 250px;
+            height: 4px;
+            background: var(--border);
+            margin: 2rem auto;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .loading-bar-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            animation: loadProgress 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes loadProgress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Animated Background */
         .bg-animation {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-            background: radial-gradient(circle at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, rgba(236,72,153,0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 20%, rgba(6,182,212,0.1) 0%, transparent 50%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+            background-size: 200% 200%;
+            animation: bgShift 15s ease infinite alternate;
         }
-        .floating-shapes { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-        .shape { position: absolute; border-radius: 50%; opacity: 0.05; animation: float 20s infinite ease-in-out; }
-        .shape:nth-child(1) { width: 300px; height: 300px; background: var(--primary); top: 10%; left: 10%; animation-delay: 0s; }
-        .shape:nth-child(2) { width: 200px; height: 200px; background: var(--secondary); top: 60%; right: 10%; animation-delay: -5s; }
-        .shape:nth-child(3) { width: 150px; height: 150px; background: var(--accent); bottom: 20%; left: 30%; animation-delay: -10s; }
-        @keyframes float { 0%,100%{transform:translate(0,0)scale(1)} 33%{transform:translate(30px,-30px)scale(1.1)} 66%{transform:translate(-20px,20px)scale(0.9)} }
 
-        /* Auth */
-        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
-        .auth-box { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 3rem; width: 100%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
-        .auth-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent)); }
-        .auth-logo { text-align: center; margin-bottom: 2rem; }
-        .auth-logo-icon { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 1rem; box-shadow: 0 8px 25px rgba(99,102,241,0.4); }
-        .auth-logo h1 { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .auth-logo p { color: var(--text-muted); margin-top: 0.5rem; }
-        .auth-form .form-group { margin-bottom: 1.2rem; }
-        .auth-form .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.9rem; }
-        .auth-form .form-input { width: 100%; padding: 14px 16px; background: var(--dark); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 1rem; transition: all 0.3s ease; }
-        .auth-form .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
-        .auth-form .btn { width: 100%; padding: 14px; font-size: 1rem; margin-top: 0.5rem; }
-        .auth-footer { text-align: center; margin-top: 1.5rem; color: var(--text-muted); }
-        .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
-        .auth-footer a:hover { text-decoration: underline; }
-        .password-strength { height: 4px; background: var(--dark); border-radius: 2px; margin-top: 8px; overflow: hidden; }
-        .password-strength-bar { height: 100%; border-radius: 2px; transition: all 0.3s ease; width: 0%; }
-        .password-strength-text { font-size: 0.75rem; margin-top: 4px; text-align: left; }
-        .security-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(16,185,129,0.2); color: var(--success); border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        @keyframes bgShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
 
-        /* App */
-        .app-container { display: none; }
-        .header { background: var(--glass); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 1rem 2rem; position: sticky; top: 0; z-index: 100; }
-        .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-        .logo { display: flex; align-items: center; gap: 12px; }
-        .logo-icon { width: 45px; height: 45px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
-        .logo-text { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .logo-sub { font-size: 0.8rem; color: var(--iqd); font-weight: 700; margin-top: -5px; }
-        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .user-info { display: flex; align-items: center; gap: 10px; padding: 8px 16px; background: var(--dark); border-radius: 10px; border: 1px solid var(--border); }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
-        .user-email { font-size: 0.85rem; color: var(--text-muted); }
+        .floating-shapes {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
 
-        .btn { padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); display: inline-flex; align-items: center; gap: 8px; position: relative; overflow: hidden; }
-        .btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.5s; }
-        .btn:hover::before { left: 100%; }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.4); }
-        .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
-        .btn-secondary:hover { background: var(--card-hover); border-color: var(--primary); }
-        .btn-success { background: linear-gradient(135deg, var(--success), #059669); color: white; }
-        .btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; }
-        .btn-warning { background: linear-gradient(135deg, var(--warning), #d97706); color: white; }
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.05;
+            animation: float 20s infinite ease-in-out;
+            box-shadow: 0 0 50px currentColor;
+        }
 
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden; transition: all 0.3s ease; }
-        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-color: var(--primary); }
-        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 1rem; }
-        .stat-icon.blue { background: rgba(99,102,241,0.2); color: var(--primary); }
-        .stat-icon.pink { background: rgba(236,72,153,0.2); color: var(--secondary); }
-        .stat-icon.cyan { background: rgba(6,182,212,0.2); color: var(--accent); }
-        .stat-icon.green { background: rgba(16,185,129,0.2); color: var(--success); }
-        .stat-icon.iqd { background: rgba(0,122,61,0.2); color: var(--iqd); }
-        .stat-value { font-size: 2rem; font-weight: 800; margin-bottom: 0.3rem; }
-        .stat-label { color: var(--text-muted); font-size: 0.9rem; }
-        .stat-change { font-size: 0.8rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 4px; }
+        .shape:nth-child(1) { width: 300px; height: 300px; background: var(--primary); top: 10%; left: 10%; animation-delay: 0s; color: var(--primary); }
+        .shape:nth-child(2) { width: 200px; height: 200px; background: var(--secondary); top: 60%; right: 10%; animation-delay: -5s; color: var(--secondary); }
+        .shape:nth-child(3) { width: 150px; height: 150px; background: var(--accent); bottom: 20%; left: 30%; animation-delay: -10s; color: var(--accent); }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            33% { transform: translate(30px, -30px) scale(1.1) rotate(10deg); }
+            66% { transform: translate(-20px, 20px) scale(0.9) rotate(-10deg); }
+        }
+
+        /* Header */
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--card-hover);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            color: white;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            flex: 1;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: rotate(15deg) scale(1.1);
+        }
+
+        .stat-icon.blue { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .stat-icon.pink { background: rgba(236, 72, 153, 0.2); color: var(--secondary); }
+        .stat-icon.cyan { background: rgba(6, 182, 212, 0.2); color: var(--accent); }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .stat-change {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .stat-change.up { color: var(--success); }
         .stat-change.down { color: var(--danger); }
 
-        .main-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2rem; }
-        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+        /* Main Content Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
 
-        .glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
-        .card-title i { color: var(--primary); }
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
-        .form-group { margin-bottom: 1.2rem; }
-        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.9rem; }
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 16px; background: var(--dark); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 1rem; transition: all 0.3s ease; }
-        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
-        .form-textarea { min-height: 80px; resize: vertical; }
-        .radio-group { display: flex; gap: 1rem; margin-top: 0.5rem; }
-        .radio-option { flex: 1; }
-        .radio-option input { display: none; }
-        .radio-option label { display: block; padding: 10px; background: var(--dark); border: 2px solid var(--border); border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s ease; font-weight: 600; }
-        .radio-option input:checked + label { border-color: var(--primary); background: rgba(99,102,241,0.1); color: var(--primary); }
+        /* Glass Card */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
 
-        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; }
-        thead { background: var(--dark); }
-        th { padding: 1rem; text-align: right; font-weight: 700; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-        td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        tbody tr { transition: all 0.2s ease; }
-        tbody tr:hover { background: rgba(99,102,241,0.05); }
-        .debtor-name { font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
-        .debtor-avatar { width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
-        .amount { font-weight: 700; font-size: 1.1rem; }
-        .amount.money { color: var(--iqd); }
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-option {
+            flex: 1;
+        }
+
+        .radio-option input {
+            display: none;
+        }
+
+        .radio-option label {
+            display: block;
+            padding: 10px;
+            background: var(--dark);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .radio-option input:checked + label {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            box-shadow: inset 0 0 10px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--dark);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: right;
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(99, 102, 241, 0.1);
+            transform: scale(1.005);
+        }
+
+        .debtor-name {
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .debtor-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .amount.money { color: var(--success); }
         .amount.material { color: var(--accent); }
-        .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-        .badge-money { background: rgba(0,122,61,0.2); color: var(--iqd); }
-        .badge-material { background: rgba(6,182,212,0.2); color: var(--accent); }
-        .badge-paid { background: rgba(16,185,129,0.2); color: var(--success); }
-        .badge-unpaid { background: rgba(239,68,68,0.2); color: var(--danger); }
-        .badge-partial { background: rgba(245,158,11,0.2); color: var(--warning); }
-        .action-btns { display: flex; gap: 5px; }
-        .btn-icon { width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; font-size: 0.85rem; }
-        .btn-icon.edit { background: rgba(99,102,241,0.2); color: var(--primary); }
-        .btn-icon.delete { background: rgba(239,68,68,0.2); color: var(--danger); }
-        .btn-icon.pay { background: rgba(16,185,129,0.2); color: var(--success); }
-        .btn-icon.history { background: rgba(6,182,212,0.2); color: var(--accent); }
-        .btn-icon:hover { transform: scale(1.1); }
 
-        .toolbar { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .search-box { flex: 1; min-width: 250px; position: relative; }
-        .search-box i { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-        .search-box input { width: 100%; padding: 12px 16px 12px 45px; background: var(--dark); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 1rem; }
-        .search-box input:focus { outline: none; border-color: var(--primary); }
-        .filter-select { padding: 12px 16px; background: var(--dark); border: 1px solid var(--border); border-radius: 10px; color: var(--text); min-width: 150px; }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
-        .modal-overlay.active { display: flex; opacity: 1; }
-        .modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s ease; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
-        .modal-overlay.active .modal { transform: scale(1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-title { font-size: 1.3rem; font-weight: 700; }
-        .modal-close { width: 36px; height: 36px; border-radius: 10px; border: none; background: var(--dark); color: var(--text-muted); cursor: pointer; font-size: 1.2rem; transition: all 0.2s ease; }
-        .modal-close:hover { background: var(--danger); color: white; }
+        .badge-money { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-material { background: rgba(6, 182, 212, 0.2); color: var(--accent); border: 1px solid rgba(6, 182, 212, 0.3); }
+        .badge-paid { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge-unpaid { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge-partial { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
 
-        .toast-container { position: fixed; top: 20px; left: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.5rem; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s; min-width: 300px; }
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .btn-icon.edit { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .btn-icon.delete { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .btn-icon.pay { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        .btn-icon:hover {
+            transform: scale(1.15) translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Search & Filter */
+        .toolbar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 45px;
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .modal::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: var(--dark);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+            min-width: 300px;
+        }
+
         .toast.success { border-right: 4px solid var(--success); }
         .toast.error { border-right: 4px solid var(--danger); }
         .toast.warning { border-right: 4px solid var(--warning); }
         .toast.info { border-right: 4px solid var(--primary); }
-        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-        .chart-container { position: relative; height: 300px; margin-top: 1rem; }
-        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
-        .empty-state i { font-size: 4rem; margin-bottom: 1rem; opacity: 0.5; }
-        .empty-state h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
-        .pulse { animation: pulse 2s infinite; }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
 
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden;}
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+            animation: pulse 2s infinite;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer Credit */
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .footer span {
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+        }
+
+        .footer i {
+            color: var(--secondary);
+            margin: 0 5px;
+            animation: pulse 2s infinite;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--dark); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
+        /* Responsive */
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .header-content { flex-direction: column; gap: 1rem; }
@@ -196,25 +850,34 @@
             .search-box { width: 100%; }
             table { font-size: 0.85rem; }
             th, td { padding: 0.75rem; }
-            .auth-box { padding: 2rem 1.5rem; }
         }
 
-        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
+        /* Print Styles */
         @media print {
-            .header, .btn, .action-btns, .toolbar, .stats-grid, .main-grid > div:first-child { display: none !important; }
+            .header, .btn, .action-btns, .toolbar, .stats-grid, .main-grid > div:first-child, .footer, .bg-animation, .floating-shapes {
+                display: none !important;
+            }
             .main-grid { grid-template-columns: 1fr; }
             body { background: white; color: black; }
             .glass-card { border: 1px solid #ddd; box-shadow: none; }
         }
-
-        .history-item { padding: 10px; border-radius: 8px; background: var(--dark); margin-bottom: 8px; border-right: 3px solid var(--success); }
-        .history-date { font-size: 0.8rem; color: var(--text-muted); }
-        .history-amount { font-weight: 700; color: var(--success); }
     </style>
 </head>
 <body>
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-icon">
+                <i class="fas fa-microchip"></i>
+            </div>
+            <h1 class="splash-title">نظام الديون الذكي</h1>
+            <p class="splash-subtitle">جاري تهيئة بيئة العمل...</p>
+            <div class="loading-bar-container">
+                <div class="loading-bar-progress"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-animation"></div>
     <div class="floating-shapes">
         <div class="shape"></div>
@@ -222,242 +885,234 @@
         <div class="shape"></div>
     </div>
 
-    <!-- Login Page -->
-    <div class="auth-container" id="loginPage">
-        <div class="auth-box">
-            <div class="auth-logo">
-                <div class="auth-logo-icon"><i class="fas fa-wallet"></i></div>
-                <h1>نظام الديون الذكي</h1>
-                <p>تسجيل الدخول إلى حسابك</p>
-                <div class="security-badge" style="margin-top: 10px;"><i class="fas fa-shield-alt"></i> البيانات مشفرة ومحمية</div>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="logo-text">نظام الديون الذكي</div>
             </div>
-            <form class="auth-form" onsubmit="login(event)">
-                <div class="form-group">
-                    <label class="form-label">البريد الإلكتروني</label>
-                    <input type="email" class="form-input" id="loginEmail" placeholder="example@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">كلمة المرور</label>
-                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
-            </form>
-            <div class="auth-footer">
-                <p>ليس لديك حساب؟ <a onclick="showRegister()">إنشاء حساب جديد</a></p>
-                <p style="margin-top: 8px;"><a onclick="showForgot()">نسيت كلمة المرور؟</a></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Register Page -->
-    <div class="auth-container" id="registerPage" style="display:none">
-        <div class="auth-box">
-            <div class="auth-logo">
-                <div class="auth-logo-icon"><i class="fas fa-user-plus"></i></div>
-                <h1>إنشاء حساب جديد</h1>
-                <p>سجل بياناتك للبدء</p>
-            </div>
-            <form class="auth-form" onsubmit="register(event)">
-                <div class="form-group">
-                    <label class="form-label">الاسم الكامل</label>
-                    <input type="text" class="form-input" id="regName" placeholder="محمد أحمد" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">البريد الإلكتروني</label>
-                    <input type="email" class="form-input" id="regEmail" placeholder="example@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">كلمة المرور</label>
-                    <input type="password" class="form-input" id="regPassword" placeholder="8 أحرف على الأقل" minlength="8" required oninput="checkPasswordStrength(this.value)">
-                    <div class="password-strength"><div class="password-strength-bar" id="strengthBar"></div></div>
-                    <div class="password-strength-text" id="strengthText"></div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">تأكيد كلمة المرور</label>
-                    <input type="password" class="form-input" id="regConfirmPassword" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
-            </form>
-            <div class="auth-footer">
-                <p>لديك حساب بالفعل؟ <a onclick="showLogin()">تسجيل الدخول</a></p>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportData()">
+                    <i class="fas fa-download"></i>
+                    تصدير JSON
+                </button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+                    <i class="fas fa-upload"></i>
+                    استيراد
+                </button>
+                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+                <button class="btn btn-secondary" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf"></i>
+                    PDF
+                </button>
+                <button class="btn btn-primary" onclick="openModal()">
+                    <i class="fas fa-plus"></i>
+                    إضافة دين جديد
+                </button>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Forgot Password Page -->
-    <div class="auth-container" id="forgotPage" style="display:none">
-        <div class="auth-box">
-            <div class="auth-logo">
-                <div class="auth-logo-icon"><i class="fas fa-key"></i></div>
-                <h1>استعادة كلمة المرور</h1>
-                <p>أدخل بريدك الإلكتروني لاستعادة الحساب</p>
-            </div>
-            <form class="auth-form" onsubmit="forgotPassword(event)">
-                <div class="form-group">
-                    <label class="form-label">البريد الإلكتروني</label>
-                    <input type="email" class="form-input" id="forgotEmail" placeholder="example@email.com" required>
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="fas fa-money-bill-wave"></i>
                 </div>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> إرسال رابط الاستعادة</button>
-            </form>
-            <div class="auth-footer">
-                <p><a onclick="showLogin()">العودة لتسجيل الدخول</a></p>
+                <div class="stat-value" id="totalMoney">0</div>
+                <div class="stat-label">إجمالي الديون المالية</div>
+                <div class="stat-change up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>دينار عراقي</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pink">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="stat-value" id="totalMaterials">0</div>
+                <div class="stat-label">إجمالي المواد المباعة</div>
+                <div class="stat-change up">
+                    <i class="fas fa-cube"></i>
+                    <span>مادة</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon cyan">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value" id="totalDebtors">0</div>
+                <div class="stat-label">عدد المدينين</div>
+                <div class="stat-change up">
+                    <i class="fas fa-user"></i>
+                    <span>شخص</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-value" id="paidCount">0</div>
+                <div class="stat-label">السجلات المسددة</div>
+                <div class="stat-change up">
+                    <i class="fas fa-percentage"></i>
+                    <span id="paidPercent">0%</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Main App -->
-    <div class="app-container" id="appContainer">
-        <header class="header">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon"><i class="fas fa-wallet"></i></div>
-                    <div>
-                        <div class="logo-text">نظام الديون الذكي</div>
-                        <div class="logo-sub">🇮🇶 بالدينار العراقي</div>
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Add/Edit Form -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <i class="fas fa-edit"></i>
+                    إضافة / تعديل دين
+                </div>
+                <form id="debtForm" onsubmit="saveDebt(event)">
+                    <input type="hidden" id="editId">
+
+                    <div class="form-group">
+                        <label class="form-label">نوع الدين</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" name="debtType" id="typeMoney" value="money" checked onchange="toggleType()">
+                                <label for="typeMoney">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    مبلغ مالي
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="debtType" id="typeMaterial" value="material" onchange="toggleType()">
+                                <label for="typeMaterial">
+                                    <i class="fas fa-box"></i>
+                                    مواد
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">الاسم الكامل *</label>
+                        <input type="text" class="form-input" id="debtorName" placeholder="أدخل اسم المدين" required>
+                    </div>
+
+                    <div class="form-group" id="amountGroup">
+                        <label class="form-label">المبلغ (دينار) *</label>
+                        <input type="number" class="form-input" id="amount" placeholder="0.00" step="0.01" min="0">
+                    </div>
+
+                    <div class="form-group" id="materialGroup" style="display:none">
+                        <label class="form-label">اسم المادة والكمية *</label>
+                        <input type="text" class="form-input" id="materialDesc" placeholder="مثال: 5 أكياس أرز">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">تاريخ الدين</label>
+                        <input type="date" class="form-input" id="debtDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">تاريخ الاستحقاق</label>
+                        <input type="date" class="form-input" id="dueDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">حالة السداد</label>
+                        <select class="form-select" id="status">
+                            <option value="unpaid">غير مسدد</option>
+                            <option value="partial">مسدد جزئياً</option>
+                            <option value="paid">مسدد بالكامل</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="paidAmountGroup" style="display:none">
+                        <label class="form-label">المبلغ المسدد</label>
+                        <input type="number" class="form-input" id="paidAmount" placeholder="0.00" step="0.01" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">ملاحظات</label>
+                        <textarea class="form-textarea" id="notes" placeholder="أي ملاحظات إضافية..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%">
+                        <i class="fas fa-save"></i>
+                        حفظ السجل
+                    </button>
+                </form>
+            </div>
+
+            <!-- Table & Chart -->
+            <div>
+                <div class="glass-card" style="margin-bottom: 1.5rem">
+                    <div class="toolbar">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="بحث بالاسم أو المادة..." oninput="filterDebts()">
+                        </div>
+                        <select class="filter-select" id="filterType" onchange="filterDebts()">
+                            <option value="all">الكل</option>
+                            <option value="money">مبالغ مالية</option>
+                            <option value="material">مواد</option>
+                        </select>
+                        <select class="filter-select" id="filterStatus" onchange="filterDebts()">
+                            <option value="all">جميع الحالات</option>
+                            <option value="unpaid">غير مسدد</option>
+                            <option value="partial">جزئي</option>
+                            <option value="paid">مسدد</option>
+                        </select>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="debtsTable">
+                            <thead>
+                                <tr>
+                                    <th>المدين</th>
+                                    <th>التفاصيل</th>
+                                    <th>المبلغ/الكمية</th>
+                                    <th>التاريخ</th>
+                                    <th>الاستحقاق</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="debtsBody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="emptyState" class="empty-state" style="display:none">
+                        <i class="fas fa-inbox"></i>
+                        <h3>لا توجد سجلات</h3>
+                        <p>ابدأ بإضافة دين جديد</p>
                     </div>
                 </div>
-                <div class="header-actions">
-                    <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">U</div>
-                        <span class="user-email" id="userEmailDisplay">user@email.com</span>
-                    </div>
-                    <button class="btn btn-secondary" onclick="exportData()"><i class="fas fa-download"></i> تصدير JSON</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload"></i> استيراد</button>
-                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
-                    <button class="btn btn-secondary" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
-                </div>
-            </div>
-        </header>
 
-        <div class="container">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon iqd"><i class="fas fa-money-bill-wave"></i></div>
-                    <div class="stat-value" id="totalMoney">0</div>
-                    <div class="stat-label">إجمالي الديون المالية</div>
-                    <div class="stat-change up"><i class="fas fa-coins"></i><span>دينار عراقي</span></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon pink"><i class="fas fa-boxes"></i></div>
-                    <div class="stat-value" id="totalMaterials">0</div>
-                    <div class="stat-label">إجمالي المواد المباعة</div>
-                    <div class="stat-change up"><i class="fas fa-cube"></i><span>مادة</span></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon cyan"><i class="fas fa-users"></i></div>
-                    <div class="stat-value" id="totalDebtors">0</div>
-                    <div class="stat-label">عدد المدينين</div>
-                    <div class="stat-change up"><i class="fas fa-user"></i><span>شخص</span></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                    <div class="stat-value" id="paidCount">0</div>
-                    <div class="stat-label">السجلات المسددة</div>
-                    <div class="stat-change up"><i class="fas fa-percentage"></i><span id="paidPercent">0%</span></div>
-                </div>
-            </div>
-
-            <div class="main-grid">
+                <!-- Chart -->
                 <div class="glass-card">
-                    <div class="card-title"><i class="fas fa-edit"></i> إضافة / تعديل دين</div>
-                    <form id="debtForm" onsubmit="saveDebt(event)">
-                        <input type="hidden" id="editId">
-                        <div class="form-group">
-                            <label class="form-label">نوع الدين</label>
-                            <div class="radio-group">
-                                <div class="radio-option">
-                                    <input type="radio" name="debtType" id="typeMoney" value="money" checked onchange="toggleType()">
-                                    <label for="typeMoney"><i class="fas fa-money-bill-wave"></i> مبلغ مالي</label>
-                                </div>
-                                <div class="radio-option">
-                                    <input type="radio" name="debtType" id="typeMaterial" value="material" onchange="toggleType()">
-                                    <label for="typeMaterial"><i class="fas fa-box"></i> مواد</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">الاسم الكامل *</label>
-                            <input type="text" class="form-input" id="debtorName" placeholder="أدخل اسم المدين" required>
-                        </div>
-                        <div class="form-group" id="amountGroup">
-                            <label class="form-label">المبلغ (دينار عراقي) *</label>
-                            <input type="number" class="form-input" id="amount" placeholder="0" step="1" min="0">
-                        </div>
-                        <div class="form-group" id="materialGroup" style="display:none">
-                            <label class="form-label">اسم المادة والكمية *</label>
-                            <input type="text" class="form-input" id="materialDesc" placeholder="مثال: 5 أكياس أرز">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">تاريخ الدين</label>
-                            <input type="date" class="form-input" id="debtDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">تاريخ الاستحقاق</label>
-                            <input type="date" class="form-input" id="dueDate">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">حالة السداد</label>
-                            <select class="form-select" id="status">
-                                <option value="unpaid">غير مسدد</option>
-                                <option value="partial">مسدد جزئياً</option>
-                                <option value="paid">مسدد بالكامل</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="paidAmountGroup" style="display:none">
-                            <label class="form-label">المبلغ المسدد (د.ع)</label>
-                            <input type="number" class="form-input" id="paidAmount" placeholder="0" step="1" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">ملاحظات</label>
-                            <textarea class="form-textarea" id="notes" placeholder="أي ملاحظات إضافية..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="width:100%"><i class="fas fa-save"></i> حفظ السجل</button>
-                    </form>
-                </div>
-
-                <div>
-                    <div class="glass-card" style="margin-bottom: 1.5rem">
-                        <div class="toolbar">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="searchInput" placeholder="بحث بالاسم أو المادة..." oninput="filterDebts()">
-                            </div>
-                            <select class="filter-select" id="filterType" onchange="filterDebts()">
-                                <option value="all">الكل</option>
-                                <option value="money">مبالغ مالية</option>
-                                <option value="material">مواد</option>
-                            </select>
-                            <select class="filter-select" id="filterStatus" onchange="filterDebts()">
-                                <option value="all">جميع الحالات</option>
-                                <option value="unpaid">غير مسدد</option>
-                                <option value="partial">جزئي</option>
-                                <option value="paid">مسدد</option>
-                            </select>
-                        </div>
-                        <div class="table-container">
-                            <table id="debtsTable">
-                                <thead>
-                                    <tr><th>المدين</th><th>التفاصيل</th><th>المبلغ/الكمية</th><th>التاريخ</th><th>الاستحقاق</th><th>الحالة</th><th>الإجراءات</th></tr>
-                                </thead>
-                                <tbody id="debtsBody"></tbody>
-                            </table>
-                        </div>
-                        <div id="emptyState" class="empty-state" style="display:none">
-                            <i class="fas fa-inbox"></i>
-                            <h3>لا توجد سجلات</h3>
-                            <p>ابدأ بإضافة دين جديد</p>
-                        </div>
+                    <div class="card-title">
+                        <i class="fas fa-chart-pie"></i>
+                        إحصائيات الديون
                     </div>
-                    <div class="glass-card">
-                        <div class="card-title"><i class="fas fa-chart-pie"></i> إحصائيات الديون</div>
-                        <div class="chart-container"><canvas id="debtChart"></canvas></div>
+                    <div class="chart-container">
+                        <canvas id="debtChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Footer Credit -->
+    <footer class="footer">
+        <div>تطوير <i class="fas fa-code"></i> <span>الاعلامي عباس بركات فرحان</span></div>
+    </footer>
 
+    <!-- Payment Modal -->
     <div class="modal-overlay" id="paymentModal">
         <div class="modal">
             <div class="modal-header">
@@ -471,289 +1126,131 @@
                     <input type="text" class="form-input" id="paymentTotal" readonly>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">المبلغ المسدد (د.ع)</label>
-                    <input type="number" class="form-input" id="paymentAmount" step="1" min="0" required>
+                    <label class="form-label">المبلغ المسدد</label>
+                    <input type="number" class="form-input" id="paymentAmount" step="0.01" min="0" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">تاريخ السداد</label>
                     <input type="date" class="form-input" id="paymentDate" required>
                 </div>
-                <button type="submit" class="btn btn-success" style="width:100%"><i class="fas fa-check"></i> تأكيد السداد</button>
+                <button type="submit" class="btn btn-success" style="width:100%">
+                    <i class="fas fa-check"></i>
+                    تأكيد السداد
+                </button>
             </form>
         </div>
     </div>
 
-    <div class="modal-overlay" id="historyModal">
-        <div class="modal" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3 class="modal-title">سجل السدادات</h3>
-                <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
-            </div>
-            <div id="historyContent"></div>
-        </div>
-    </div>
-
+    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
+        // Splash Screen Logic
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('splashScreen').classList.add('hidden');
+            }, 3000);
+        });
 
-        // ========== AUTH SYSTEM ==========
-        let currentUser = null;
-        let debts = [];
+        // Data Management
+        let debts = JSON.parse(localStorage.getItem('debts')) || [];
         let chart = null;
 
-        function hashPassword(password) {
-            let hash = 0;
-            for (let i = 0; i < password.length; i++) {
-                const char = password.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return hash.toString(16);
-        }
-
-        function getEncryptionKey(password) {
-            return hashPassword(password + '_debt_app_salt_2024');
-        }
-
-        function encryptData(data, key) {
-            let result = '';
-            for (let i = 0; i < data.length; i++) {
-                result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-            }
-            return btoa(result);
-        }
-
-        function decryptData(encryptedData, key) {
-            try {
-                const data = atob(encryptedData);
-                let result = '';
-                for (let i = 0; i < data.length; i++) {
-                    result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-                }
-                return result;
-            } catch (e) { return null; }
-        }
-
-        function getUsers() {
-            const users = localStorage.getItem('debtApp_users');
-            return users ? JSON.parse(users) : {};
-        }
-
-        function saveUsers(users) {
-            localStorage.setItem('debtApp_users', JSON.stringify(users));
-        }
-
-        function getUserDataKey(email) {
-            return 'debtApp_data_' + btoa(email);
-        }
-
-        function saveUserDebts() {
-            if (!currentUser) return;
-            const key = getEncryptionKey(currentUser.password);
-            const encrypted = encryptData(JSON.stringify(debts), key);
-            localStorage.setItem(getUserDataKey(currentUser.email), encrypted);
-        }
-
-        function loadUserDebts() {
-            if (!currentUser) { debts = []; return; }
-            const key = getEncryptionKey(currentUser.password);
-            const encrypted = localStorage.getItem(getUserDataKey(currentUser.email));
-            if (encrypted) {
-                const decrypted = decryptData(encrypted, key);
-                if (decrypted) {
-                    try { debts = JSON.parse(decrypted); } catch (e) { debts = []; }
-                } else { debts = []; }
-            } else { debts = []; }
-        }
-
-        function showLogin() {
-            document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('registerPage').style.display = 'none';
-            document.getElementById('forgotPage').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'none';
-        }
-
-        function showRegister() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('registerPage').style.display = 'flex';
-            document.getElementById('forgotPage').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'none';
-        }
-
-        function showForgot() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('registerPage').style.display = 'none';
-            document.getElementById('forgotPage').style.display = 'flex';
-            document.getElementById('appContainer').style.display = 'none';
-        }
-
-        function showApp() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('registerPage').style.display = 'none';
-            document.getElementById('forgotPage').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            document.getElementById('userEmailDisplay').textContent = currentUser.email;
-            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-            loadUserDebts();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('debtDate').valueAsDate = new Date();
             renderDebts();
             updateStats();
             initChart();
-        }
+        });
 
-        function register(e) {
-            e.preventDefault();
-            const name = document.getElementById('regName').value.trim();
-            const email = document.getElementById('regEmail').value.trim().toLowerCase();
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regConfirmPassword').value;
-
-            if (password !== confirmPassword) { showToast('كلمتا المرور غير متطابقتين', 'error'); return; }
-            if (password.length < 8) { showToast('كلمة المرور يجب ان تكون 8 احرف على الاقل', 'error'); return; }
-
-            const users = getUsers();
-            if (users[email]) { showToast('هذا البريد الالكتروني مسجل مسبقاً', 'error'); return; }
-
-            const hashedPassword = hashPassword(password);
-            users[email] = { name: name, email: email, password: hashedPassword, createdAt: new Date().toISOString() };
-            saveUsers(users);
-            showToast('تم انشاء الحساب بنجاح! يمكنك الان تسجيل الدخول', 'success');
-            showLogin();
-        }
-
-        function login(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-            const password = document.getElementById('loginPassword').value;
-            const users = getUsers();
-            const user = users[email];
-
-            if (!user) { showToast('البريد الالكتروني غير مسجل', 'error'); return; }
-            const hashedPassword = hashPassword(password);
-            if (user.password !== hashedPassword) { showToast('كلمة المرور غير صحيحة', 'error'); return; }
-
-            currentUser = { name: user.name, email: user.email, password: hashedPassword };
-            sessionStorage.setItem('debtApp_session', JSON.stringify({ email: user.email, name: user.name }));
-            showToast('تم تسجيل الدخول بنجاح', 'success');
-            showApp();
-        }
-
-        function forgotPassword(e) {
-            e.preventDefault();
-            const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
-            const users = getUsers();
-            if (!users[email]) { showToast('البريد الالكتروني غير مسجل', 'error'); return; }
-
-            const token = Date.now().toString(36) + Math.random().toString(36).substr(2);
-            const resets = JSON.parse(localStorage.getItem('debtApp_resets') || '{}');
-            resets[email] = { token: token, expires: Date.now() + 3600000 };
-            localStorage.setItem('debtApp_resets', JSON.stringify(resets));
-
-            showToast('تم ارسال رابط الاستعادة (محاكاة - تحقق من وحدة التحكم)', 'success');
-            console.log('Reset link: ?reset=' + token + '&email=' + email);
-            showLogin();
-        }
-
-        function logout() {
-            currentUser = null;
-            debts = [];
-            sessionStorage.removeItem('debtApp_session');
-            showToast('تم تسجيل الخروج', 'info');
-            showLogin();
-        }
-
-        function checkSession() {
-            const session = sessionStorage.getItem('debtApp_session');
-            if (session) {
-                const data = JSON.parse(session);
-                const users = getUsers();
-                const user = users[data.email];
-                if (user) {
-                    currentUser = { name: user.name, email: user.email, password: user.password };
-                    showApp();
-                    return;
-                }
-            }
-            showLogin();
-        }
-
-        function checkPasswordStrength(password) {
-            const bar = document.getElementById('strengthBar');
-            const text = document.getElementById('strengthText');
-            let strength = 0;
-            if (password.length >= 8) strength++;
-            if (password.match(/[a-z]/)) strength++;
-            if (password.match(/[A-Z]/)) strength++;
-            if (password.match(/[0-9]/)) strength++;
-            if (password.match(/[^a-zA-Z0-9]/)) strength++;
-            const colors = ['#ef4444', '#f59e0b', '#f59e0b', '#10b981', '#10b981'];
-            const labels = ['ضعيفة جداً', 'ضعيفة', 'متوسطة', 'قوية', 'قوية جداً'];
-            const widths = ['20%', '40%', '60%', '80%', '100%'];
-            bar.style.width = widths[strength - 1] || '0%';
-            bar.style.background = colors[strength - 1] || '#ef4444';
-            text.textContent = labels[strength - 1] || '';
-            text.style.color = colors[strength - 1] || '#ef4444';
-        }
-
-        // ========== APP FUNCTIONS ==========
+        // Toggle Type
         function toggleType() {
             const type = document.querySelector('input[name="debtType"]:checked').value;
             document.getElementById('amountGroup').style.display = type === 'money' ? 'block' : 'none';
             document.getElementById('materialGroup').style.display = type === 'material' ? 'block' : 'none';
+
             const amountInput = document.getElementById('amount');
             const materialInput = document.getElementById('materialDesc');
-            if (type === 'money') { amountInput.required = true; materialInput.required = false; }
-            else { amountInput.required = false; materialInput.required = true; }
+
+            if (type === 'money') {
+                amountInput.required = true;
+                materialInput.required = false;
+            } else {
+                amountInput.required = false;
+                materialInput.required = true;
+            }
         }
 
+        // Status Change
         document.getElementById('status').addEventListener('change', function() {
-            document.getElementById('paidAmountGroup').style.display = this.value === 'partial' ? 'block' : 'none';
+            document.getElementById('paidAmountGroup').style.display = 
+                this.value === 'partial' ? 'block' : 'none';
         });
 
+        // Save Debt
         function saveDebt(e) {
             e.preventDefault();
+
             const id = document.getElementById('editId').value;
             const type = document.querySelector('input[name="debtType"]:checked').value;
             const name = document.getElementById('debtorName').value.trim();
-            const amount = parseInt(document.getElementById('amount').value) || 0;
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
             const materialDesc = document.getElementById('materialDesc').value.trim();
             const debtDate = document.getElementById('debtDate').value;
             const dueDate = document.getElementById('dueDate').value;
             const status = document.getElementById('status').value;
-            const paidAmount = parseInt(document.getElementById('paidAmount').value) || 0;
+            const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
             const notes = document.getElementById('notes').value.trim();
 
-            if (!name) { showToast('الرجاء ادخال اسم المدين', 'error'); return; }
-            if (type === 'money' && amount <= 0) { showToast('الرجاء ادخال مبلغ صحيح', 'error'); return; }
-            if (type === 'material' && !materialDesc) { showToast('الرجاء ادخال وصف المادة', 'error'); return; }
+            if (!name) {
+                showToast('الرجاء إدخال اسم المدين', 'error');
+                return;
+            }
 
-            let history = [];
-            if (id) { const existing = debts.find(d => d.id === id); if (existing) history = existing.history || []; }
+            if (type === 'money' && amount <= 0) {
+                showToast('الرجاء إدخال مبلغ صحيح', 'error');
+                return;
+            }
+
+            if (type === 'material' && !materialDesc) {
+                showToast('الرجاء إدخال وصف المادة', 'error');
+                return;
+            }
 
             const debt = {
-                id: id || Date.now().toString(), type, name,
+                id: id || Date.now().toString(),
+                type,
+                name,
                 amount: type === 'money' ? amount : 0,
                 materialDesc: type === 'material' ? materialDesc : '',
-                debtDate, dueDate, status,
+                debtDate,
+                dueDate,
+                status,
                 paidAmount: status === 'paid' ? amount : (status === 'partial' ? paidAmount : 0),
-                notes, history,
+                notes,
                 createdAt: id ? debts.find(d => d.id === id)?.createdAt || new Date().toISOString() : new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
-            if (id) { const index = debts.findIndex(d => d.id === id); debts[index] = debt; showToast('تم تحديث السجل بنجاح', 'success'); }
-            else { debts.push(debt); showToast('تم اضافة السجل بنجاح', 'success'); }
+            if (id) {
+                const index = debts.findIndex(d => d.id === id);
+                debts[index] = debt;
+                showToast('تم تحديث السجل بنجاح', 'success');
+            } else {
+                debts.push(debt);
+                showToast('تم إضافة السجل بنجاح', 'success');
+            }
 
-            saveUserDebts();
+            saveToStorage();
             resetForm();
             renderDebts();
             updateStats();
             updateChart();
         }
 
-        function renderDebts(filtered) {
-            if (!filtered) filtered = debts;
+        // Render Debts
+        function renderDebts(filtered = debts) {
             const tbody = document.getElementById('debtsBody');
             const emptyState = document.getElementById('emptyState');
             const table = document.getElementById('debtsTable');
@@ -764,60 +1261,102 @@
                 table.style.display = 'none';
                 return;
             }
+
             emptyState.style.display = 'none';
             table.style.display = 'table';
 
             tbody.innerHTML = filtered.map(debt => {
                 const initials = debt.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                const amountDisplay = debt.type === 'money' ? debt.amount.toLocaleString('ar-IQ') + ' د.ع' : debt.materialDesc;
+                const amountDisplay = debt.type === 'money' 
+                    ? `${debt.amount.toLocaleString()} د.ع`
+                    : debt.materialDesc;
                 const amountClass = debt.type === 'money' ? 'money' : 'material';
                 const badgeClass = debt.type === 'money' ? 'badge-money' : 'badge-material';
                 const typeLabel = debt.type === 'money' ? 'مالي' : 'مادة';
 
-                let statusBadge = '', statusClass = '';
+                let statusBadge = '';
+                let statusClass = '';
                 switch(debt.status) {
-                    case 'paid': statusBadge = 'مسدد'; statusClass = 'badge-paid'; break;
-                    case 'partial': statusBadge = 'جزئي (' + (debt.paidAmount || 0).toLocaleString('ar-IQ') + ')'; statusClass = 'badge-partial'; break;
-                    default: statusBadge = 'غير مسدد'; statusClass = 'badge-unpaid';
+                    case 'paid':
+                        statusBadge = 'مسدد';
+                        statusClass = 'badge-paid';
+                        break;
+                    case 'partial':
+                        statusBadge = `جزئي (${debt.paidAmount?.toLocaleString() || 0})`;
+                        statusClass = 'badge-partial';
+                        break;
+                    default:
+                        statusBadge = 'غير مسدد';
+                        statusClass = 'badge-unpaid';
                 }
 
                 const remaining = debt.type === 'money' && debt.status !== 'paid' 
-                    ? '<div style="font-size:0.8rem;color:var(--danger)">متبقي: ' + (debt.amount - (debt.paidAmount || 0)).toLocaleString('ar-IQ') + ' د.ع</div>' : '';
-                const hasHistory = debt.history && debt.history.length > 0;
+                    ? `<div style="font-size:0.8rem;color:var(--danger)">متبقي: ${(debt.amount - (debt.paidAmount || 0)).toLocaleString()} د.ع</div>` 
+                    : '';
 
-                return '<tr>' +
-                    '<td><div class="debtor-name"><div class="debtor-avatar">' + initials + '</div>' + debt.name + '</div></td>' +
-                    '<td><span class="badge ' + badgeClass + '">' + typeLabel + '</span>' + (debt.notes ? '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">' + debt.notes + '</div>' : '') + '</td>' +
-                    '<td><div class="amount ' + amountClass + '">' + amountDisplay + '</div>' + remaining + '</td>' +
-                    '<td>' + formatDate(debt.debtDate) + '</td>' +
-                    '<td>' + (debt.dueDate ? formatDate(debt.dueDate) : '-') + '</td>' +
-                    '<td><span class="badge ' + statusClass + '">' + statusBadge + '</span></td>' +
-                    '<td><div class="action-btns">' +
-                        (debt.type === 'money' && debt.status !== 'paid' ? '<button class="btn-icon pay" onclick="openPaymentModal('' + debt.id + '')" title="تسجيل سداد"><i class="fas fa-hand-holding-usd"></i></button>' : '') +
-                        (hasHistory ? '<button class="btn-icon history" onclick="showHistory('' + debt.id + '')" title="سجل السدادات"><i class="fas fa-history"></i></button>' : '') +
-                        '<button class="btn-icon edit" onclick="editDebt('' + debt.id + '')" title="تعديل"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-icon delete" onclick="deleteDebt('' + debt.id + '')" title="حذف"><i class="fas fa-trash"></i></button>' +
-                    '</div></td>' +
-                '</tr>';
+                return `
+                    <tr>
+                        <td>
+                            <div class="debtor-name">
+                                <div class="debtor-avatar">${initials}</div>
+                                ${debt.name}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge ${badgeClass}">${typeLabel}</span>
+                            ${debt.notes ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">${debt.notes}</div>` : ''}
+                        </td>
+                        <td>
+                            <div class="amount ${amountClass}">${amountDisplay}</div>
+                            ${remaining}
+                        </td>
+                        <td>${formatDate(debt.debtDate)}</td>
+                        <td>${debt.dueDate ? formatDate(debt.dueDate) : '-'}</td>
+                        <td><span class="badge ${statusClass}">${statusBadge}</span></td>
+                        <td>
+                            <div class="action-btns">
+                                ${debt.type === 'money' && debt.status !== 'paid' ? `
+                                    <button class="btn-icon pay" onclick="openPaymentModal('${debt.id}')" title="تسجيل سداد">
+                                        <i class="fas fa-hand-holding-usd"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn-icon edit" onclick="editDebt('${debt.id}')" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="deleteDebt('${debt.id}')" title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             }).join('');
         }
 
+        // Filter Debts
         function filterDebts() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const type = document.getElementById('filterType').value;
             const status = document.getElementById('filterStatus').value;
+
             const filtered = debts.filter(debt => {
-                const matchSearch = debt.name.toLowerCase().includes(search) || debt.materialDesc.toLowerCase().includes(search) || debt.notes.toLowerCase().includes(search);
+                const matchSearch = debt.name.toLowerCase().includes(search) || 
+                                   debt.materialDesc.toLowerCase().includes(search) ||
+                                   debt.notes.toLowerCase().includes(search);
                 const matchType = type === 'all' || debt.type === type;
                 const matchStatus = status === 'all' || debt.status === status;
+
                 return matchSearch && matchType && matchStatus;
             });
+
             renderDebts(filtered);
         }
 
+        // Edit Debt
         function editDebt(id) {
             const debt = debts.find(d => d.id === id);
             if (!debt) return;
+
             document.getElementById('editId').value = debt.id;
             document.getElementById('debtorName').value = debt.name;
             document.getElementById('amount').value = debt.amount;
@@ -827,79 +1366,78 @@
             document.getElementById('status').value = debt.status;
             document.getElementById('paidAmount').value = debt.paidAmount || '';
             document.getElementById('notes').value = debt.notes || '';
-            document.querySelector('input[name="debtType"][value="' + debt.type + '"]').checked = true;
+
+            document.querySelector(`input[name="debtType"][value="${debt.type}"]`).checked = true;
             toggleType();
-            if (debt.status === 'partial') document.getElementById('paidAmountGroup').style.display = 'block';
+
+            if (debt.status === 'partial') {
+                document.getElementById('paidAmountGroup').style.display = 'block';
+            }
+
             document.getElementById('debtorName').scrollIntoView({ behavior: 'smooth' });
             showToast('جاري تعديل السجل...', 'info');
         }
 
+        // Delete Debt
         function deleteDebt(id) {
-            if (!confirm('هل انت متأكد من حذف هذا السجل؟')) return;
+            if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
+
             debts = debts.filter(d => d.id !== id);
-            saveUserDebts();
+            saveToStorage();
             renderDebts();
             updateStats();
             updateChart();
             showToast('تم حذف السجل بنجاح', 'success');
         }
 
+        // Payment Modal
         function openPaymentModal(id) {
             const debt = debts.find(d => d.id === id);
             if (!debt) return;
+
             document.getElementById('paymentDebtId').value = id;
-            document.getElementById('paymentTotal').value = debt.amount.toLocaleString('ar-IQ') + ' د.ع';
+            document.getElementById('paymentTotal').value = debt.amount.toLocaleString() + ' د.ع';
             document.getElementById('paymentAmount').value = '';
             document.getElementById('paymentDate').valueAsDate = new Date();
             document.getElementById('paymentModal').classList.add('active');
         }
 
-        function closePaymentModal() { document.getElementById('paymentModal').classList.remove('active'); }
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+        }
 
         function processPayment(e) {
             e.preventDefault();
             const id = document.getElementById('paymentDebtId').value;
-            const amount = parseInt(document.getElementById('paymentAmount').value);
-            const paymentDate = document.getElementById('paymentDate').value;
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
             const debt = debts.find(d => d.id === id);
-            if (!debt || amount <= 0) { showToast('الرجاء ادخال مبلغ صحيح', 'error'); return; }
+
+            if (!debt || amount <= 0) {
+                showToast('الرجاء إدخال مبلغ صحيح', 'error');
+                return;
+            }
 
             const totalPaid = (debt.paidAmount || 0) + amount;
-            if (!debt.history) debt.history = [];
-            debt.history.push({ amount: amount, date: paymentDate, timestamp: new Date().toISOString() });
 
             if (totalPaid >= debt.amount) {
-                debt.status = 'paid'; debt.paidAmount = debt.amount;
+                debt.status = 'paid';
+                debt.paidAmount = debt.amount;
                 showToast('تم تسديد الدين بالكامل!', 'success');
             } else {
-                debt.status = 'partial'; debt.paidAmount = totalPaid;
-                showToast('تم تسديد ' + amount.toLocaleString('ar-IQ') + ' د.ع', 'success');
+                debt.status = 'partial';
+                debt.paidAmount = totalPaid;
+                showToast(`تم تسديد ${amount.toLocaleString()} د.ع`, 'success');
             }
+
             debt.updatedAt = new Date().toISOString();
-            saveUserDebts();
+            saveToStorage();
             closePaymentModal();
             renderDebts();
             updateStats();
             updateChart();
         }
 
-        function showHistory(id) {
-            const debt = debts.find(d => d.id === id);
-            if (!debt || !debt.history || debt.history.length === 0) return;
-            const content = document.getElementById('historyContent');
-            content.innerHTML = 
-                '<div style="margin-bottom: 1rem;"><strong>المدين:</strong> ' + debt.name + '<br><strong>المبلغ الاجمالي:</strong> ' + debt.amount.toLocaleString('ar-IQ') + ' د.ع</div>' +
-                '<h4 style="margin-bottom: 1rem; color: var(--primary);">سجل السدادات:</h4>' +
-                debt.history.map(h => '<div class="history-item"><div class="history-amount">+ ' + h.amount.toLocaleString('ar-IQ') + ' د.ع</div><div class="history-date">' + formatDate(h.date) + '</div></div>').join('') +
-                '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">' +
-                '<strong>المجموع المسدد:</strong> ' + debt.paidAmount.toLocaleString('ar-IQ') + ' د.ع<br>' +
-                '<strong>المتبقي:</strong> ' + (debt.amount - debt.paidAmount).toLocaleString('ar-IQ') + ' د.ع' +
-                '</div>';
-            document.getElementById('historyModal').classList.add('active');
-        }
-
-        function closeHistoryModal() { document.getElementById('historyModal').classList.remove('active'); }
-
+        // Stats
         function updateStats() {
             const moneyDebts = debts.filter(d => d.type === 'money');
             const totalMoney = moneyDebts.reduce((sum, d) => sum + (d.amount - (d.paidAmount || 0)), 0);
@@ -907,6 +1445,7 @@
             const uniqueDebtors = new Set(debts.map(d => d.name)).size;
             const paidCount = debts.filter(d => d.status === 'paid').length;
             const paidPercent = debts.length > 0 ? Math.round((paidCount / debts.length) * 100) : 0;
+
             animateValue('totalMoney', totalMoney, ' د.ع');
             animateValue('totalMaterials', totalMaterials, '');
             animateValue('totalDebtors', uniqueDebtors, '');
@@ -919,27 +1458,43 @@
             const start = parseInt(element.textContent.replace(/[^0-9]/g, '')) || 0;
             const duration = 1000;
             const startTime = performance.now();
+
             function update(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const easeProgress = 1 - Math.pow(1 - progress, 3);
                 const current = Math.floor(start + (end - start) * easeProgress);
-                element.textContent = current.toLocaleString('ar-IQ') + suffix;
-                if (progress < 1) requestAnimationFrame(update);
+                element.textContent = current.toLocaleString() + suffix;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
             }
+
             requestAnimationFrame(update);
         }
 
+        // Chart
         function initChart() {
             const ctx = document.getElementById('debtChart').getContext('2d');
-            if (chart) chart.destroy();
             chart = new Chart(ctx, {
                 type: 'doughnut',
                 data: getChartData(),
                 options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Tajawal', size: 12 }, padding: 20 } } },
-                    cutout: '70%', borderWidth: 0
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#94a3b8',
+                                font: { family: 'Tajawal', size: 12 },
+                                padding: 20
+                            }
+                        }
+                    },
+                    cutout: '70%',
+                    borderWidth: 0
                 }
             });
         }
@@ -948,18 +1503,33 @@
             const unpaid = debts.filter(d => d.status === 'unpaid').length;
             const partial = debts.filter(d => d.status === 'partial').length;
             const paid = debts.filter(d => d.status === 'paid').length;
-            return { labels: ['غير مسدد', 'جزئي', 'مسدد'], datasets: [{ data: [unpaid, partial, paid], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], borderColor: ['#1e293b', '#1e293b', '#1e293b'], borderWidth: 2 }] };
+
+            return {
+                labels: ['غير مسدد', 'جزئي', 'مسدد'],
+                datasets: [{
+                    data: [unpaid, partial, paid],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                    borderColor: ['#1e293b', '#1e293b', '#1e293b'],
+                    borderWidth: 2
+                }]
+            };
         }
 
-        function updateChart() { if (chart) { chart.data = getChartData(); chart.update(); } }
+        function updateChart() {
+            if (chart) {
+                chart.data = getChartData();
+                chart.update();
+            }
+        }
 
+        // Export/Import
         function exportData() {
             const data = JSON.stringify(debts, null, 2);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'debts_backup_' + currentUser.email + '_' + new Date().toISOString().split('T')[0] + '.json';
+            a.download = `debts_backup_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
             showToast('تم تصدير البيانات بنجاح', 'success');
@@ -968,17 +1538,24 @@
         function importData(input) {
             const file = input.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
                     if (Array.isArray(data)) {
-                        if (confirm('سيتم استيراد ' + data.length + ' سجل. هل تريد الاستمرار؟')) {
-                            debts = data; saveUserDebts(); renderDebts(); updateStats(); updateChart();
-                            showToast('تم استيراد البيانات بنجاح', 'success');
-                        }
-                    } else { throw new Error('Invalid format'); }
-                } catch (err) { showToast('خطأ في ملف الاستيراد', 'error'); }
+                        debts = data;
+                        saveToStorage();
+                        renderDebts();
+                        updateStats();
+                        updateChart();
+                        showToast('تم استيراد البيانات بنجاح', 'success');
+                    } else {
+                        throw new Error('Invalid format');
+                    }
+                } catch (err) {
+                    showToast('خطأ في ملف الاستيراد', 'error');
+                }
             };
             reader.readAsText(file);
             input.value = '';
@@ -986,37 +1563,65 @@
 
         function exportPDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-            doc.setFontSize(20);
-            doc.text('تقرير الديون - الدينار العراقي', 148, 15, { align: 'center' });
-            doc.setFontSize(12);
-            doc.text('المستخدم: ' + currentUser.name + ' (' + currentUser.email + ')', 148, 22, { align: 'center' });
-            doc.text('تاريخ التقرير: ' + new Date().toLocaleDateString('ar-IQ'), 148, 29, { align: 'center' });
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
 
+            // Title
+            doc.setFontSize(20);
+            doc.text('تقرير الديون', 148, 15, { align: 'center' });
+
+            doc.setFontSize(12);
+            doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString('ar-IQ')}`, 148, 25, { align: 'center' });
+
+            // Table
             const headers = ['المدين', 'النوع', 'المبلغ/المادة', 'التاريخ', 'الاستحقاق', 'الحالة'];
             const data = debts.map(d => [
                 d.name,
                 d.type === 'money' ? 'مالي' : 'مادة',
-                d.type === 'money' ? d.amount.toLocaleString('ar-IQ') + ' د.ع' : d.materialDesc,
+                d.type === 'money' ? d.amount + ' د.ع' : d.materialDesc,
                 d.debtDate,
                 d.dueDate || '-',
                 d.status === 'paid' ? 'مسدد' : d.status === 'partial' ? 'جزئي' : 'غير مسدد'
             ]);
 
             doc.autoTable({
-                head: [headers], body: data, startY: 35, theme: 'grid',
-                styles: { font: 'helvetica', halign: 'center', fontSize: 10 },
-                headStyles: { fillColor: [0, 122, 61], textColor: 255, fontStyle: 'bold' },
-                alternateRowStyles: { fillColor: [245, 245, 245] }
+                head: [headers],
+                body: data,
+                startY: 35,
+                theme: 'grid',
+                styles: {
+                    font: 'helvetica',
+                    halign: 'center',
+                    fontSize: 10
+                },
+                headStyles: {
+                    fillColor: [99, 102, 241],
+                    textColor: 255,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245]
+                }
             });
 
+            // Summary
             const totalMoney = debts.filter(d => d.type === 'money').reduce((s, d) => s + d.amount, 0);
             const finalY = doc.lastAutoTable.finalY + 10;
+
             doc.setFontSize(12);
-            doc.text('اجمالي الديون المالية: ' + totalMoney.toLocaleString('ar-IQ') + ' د.ع', 148, finalY, { align: 'center' });
-            doc.text('عدد السجلات: ' + debts.length, 148, finalY + 7, { align: 'center' });
-            doc.save('debts_report_iqd_' + new Date().toISOString().split('T')[0] + '.pdf');
+            doc.text(`إجمالي الديون المالية: ${totalMoney.toLocaleString()} د.ع`, 148, finalY, { align: 'center' });
+            doc.text(`عدد السجلات: ${debts.length}`, 148, finalY + 7, { align: 'center' });
+
+            doc.save(`debts_report_${new Date().toISOString().split('T')[0]}.pdf`);
             showToast('تم تصدير PDF بنجاح', 'success');
+        }
+
+        // Utilities
+        function saveToStorage() {
+            localStorage.setItem('debts', JSON.stringify(debts));
         }
 
         function resetForm() {
@@ -1034,15 +1639,28 @@
             return date.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' });
         }
 
-        function showToast(message, type) {
-            type = type || 'info';
+        function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-            toast.innerHTML = '<i class="fas ' + icons[type] + '"></i><span>' + message + '</span>';
+            toast.className = `toast ${type}`;
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="fas ${icons[type]}"></i>
+                <span>${message}</span>
+            `;
+
             container.appendChild(toast);
-            setTimeout(function() { toast.remove(); }, 3000);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
         }
 
         function openModal() {
@@ -1050,14 +1668,12 @@
             document.getElementById('debtorName').focus();
         }
 
+        // Close modal on outside click
         document.getElementById('paymentModal').addEventListener('click', function(e) {
             if (e.target === this) closePaymentModal();
         });
 
-        document.getElementById('historyModal').addEventListener('click', function(e) {
-            if (e.target === this) closeHistoryModal();
-        });
-
+        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
@@ -1065,12 +1681,7 @@
             }
             if (e.key === 'Escape') {
                 closePaymentModal();
-                closeHistoryModal();
             }
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            checkSession();
         });
     </script>
 </body>
